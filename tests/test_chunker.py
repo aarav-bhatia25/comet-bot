@@ -24,6 +24,7 @@ def test_standard_return_window_chunk() -> None:
     assert "30 calendar days" in chunk.text
     assert chunk.metadata["status"] == "active"
     assert chunk.metadata["policy_authority"] == "official"
+    assert chunk.metadata["is_authoritative"] is True
     assert chunk.text.startswith("Document: Returns Policy\nSection: Standard return window")
 
 

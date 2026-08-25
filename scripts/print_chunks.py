@@ -54,7 +54,7 @@ def main() -> int:
 
         print(f"[{chunk.source_file} > {chunk.heading}]")
         print(f"  id:       {chunk.id}")
-        print(f"  status:   {status} | authority: {authority}")
+        print(f"  status:   {status} | authority: {authority} | authoritative: {chunk.metadata.get('is_authoritative')}")
         print(f"  preview:  {preview}")
         print()
 

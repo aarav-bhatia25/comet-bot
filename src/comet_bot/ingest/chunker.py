@@ -8,6 +8,7 @@ from typing import Any
 
 import yaml
 
+from comet_bot.ingest.metadata import enrich_metadata
 from comet_bot.ingest.models import Chunk
 
 _FRONT_MATTER_PATTERN = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -96,7 +97,8 @@ def _split_sections(body: str) -> list[tuple[str, str]]:
 
 def chunk_markdown(raw: str, source_file: str) -> list[Chunk]:
     """Parse one markdown file's contents into breadcrumbed chunks."""
-    metadata, body = parse_front_matter(raw)
+    raw_metadata, body = parse_front_matter(raw)
+    metadata = enrich_metadata(raw_metadata)
     document_title = _document_title(metadata, body)
     body_without_h1 = _strip_document_heading(body)
     sections = _split_sections(body_without_h1)
@@ -111,7 +113,7 @@ def chunk_markdown(raw: str, source_file: str) -> list[Chunk]:
                 document_title=document_title,
                 heading=heading,
                 text=build_chunk_text(document_title, heading, content),
-                metadata=dict(metadata),
+                metadata=metadata,
             )
         )
 
