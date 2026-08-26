@@ -18,6 +18,7 @@ ORDERS_FILE = DATA_DIR / "orders.json"
 ORDERS_DATA_DICTIONARY = DATA_DIR / "orders-data-dictionary.md"
 EVALUATION_DIR = REPO_ROOT / "evaluation"
 VISIBLE_CASES_FILE = EVALUATION_DIR / "visible-cases.json"
+CUSTOM_CASES_FILE = EVALUATION_DIR / "custom-cases.json"
 
 # Sensible defaults; override via .env if needed
 DEFAULT_CHAT_MODEL = "gpt-4o-mini"
