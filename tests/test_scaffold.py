@@ -4,6 +4,7 @@ from pathlib import Path
 
 from comet_bot import __version__
 from comet_bot.config import (
+    CUSTOM_CASES_FILE,
     KNOWLEDGE_BASE_DIR,
     ORDERS_FILE,
     REPO_ROOT,
@@ -27,6 +28,7 @@ def test_assignment_data_paths_exist() -> None:
     assert len(list(KNOWLEDGE_BASE_DIR.glob("*.md"))) == 14
     assert ORDERS_FILE.is_file()
     assert VISIBLE_CASES_FILE.is_file()
+    assert CUSTOM_CASES_FILE.is_file()
 
 
 def test_knowledge_base_files_are_markdown() -> None:

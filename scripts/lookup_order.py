@@ -21,7 +21,7 @@ def main() -> int:
 
     result = lookup_order(args.order_id)
     print(json.dumps(result.to_tool_dict(), indent=2))
-    return 0 if result.found or result.error == "invalid_order_id" else 1
+    return 0
 
 
 if __name__ == "__main__":

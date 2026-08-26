@@ -12,6 +12,7 @@ sys.path.insert(0, str(SRC_DIR))
 
 from comet_bot import __version__  # noqa: E402
 from comet_bot.config import (  # noqa: E402
+    CUSTOM_CASES_FILE,
     KNOWLEDGE_BASE_DIR,
     ORDERS_FILE,
     VISIBLE_CASES_FILE,
@@ -33,7 +34,8 @@ def main() -> int:
     kb_count = len(list(KNOWLEDGE_BASE_DIR.glob("*.md")))
     print(f"Knowledge base: {kb_count} markdown files in {KNOWLEDGE_BASE_DIR}")
     print(f"Orders data:      {ORDERS_FILE}")
-    print(f"Evaluation cases: {VISIBLE_CASES_FILE}")
+    print(f"Visible cases:    {VISIBLE_CASES_FILE}")
+    print(f"Custom cases:     {CUSTOM_CASES_FILE}")
 
     settings = load_settings()
     if settings.openai_api_key:
@@ -43,7 +45,7 @@ def main() -> int:
 
     print(f"Chat model:       {settings.chat_model}")
     print(f"Embedding model:  {settings.embedding_model}")
-    print("\nSetup looks good. Next step: build the Markdown chunker in src/comet_bot/ingest/")
+    print("\nSetup looks good. Next step: build the full support agent in src/comet_bot/agent/")
     return 0
 
 

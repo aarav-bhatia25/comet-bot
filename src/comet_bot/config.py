@@ -60,4 +60,7 @@ def verify_data_paths() -> list[str]:
     if not VISIBLE_CASES_FILE.is_file():
         errors.append(f"Evaluation cases file not found: {VISIBLE_CASES_FILE}")
 
+    if not CUSTOM_CASES_FILE.is_file():
+        errors.append(f"Custom evaluation cases file not found: {CUSTOM_CASES_FILE}")
+
     return errors

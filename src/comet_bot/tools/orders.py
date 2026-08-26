@@ -43,7 +43,10 @@ def normalize_order_id(raw: str | None) -> str | None:
 
 def extract_order_id(text: str) -> str | None:
     """Find the first order ID in free-form user text."""
-    return normalize_order_id(text)
+    match = _ORDER_ID_PATTERN.search(text)
+    if match is None:
+        return None
+    return match.group(0).upper()
 
 
 def _sanitize_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -135,7 +138,7 @@ class OrderStore:
             )
 
         sanitized = _sanitize_order_record(raw_order)
-        sanitized, handoff, guidance = _apply_status_rules(sanitized)
+        sanitized, handoff, guidance = _apply_status_rules(dict(sanitized))
 
         return OrderLookupResult(
             found=True,
