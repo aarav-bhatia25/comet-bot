@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Support — Aster &amp; Row</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <header class="brand">
+          <p class="brand-eyebrow">Aster &amp; Row</p>
+          <h1 class="brand-title">Customer support</h1>
+        </header>
+
+        <section class="sidebar-section">
+          <h2 class="sidebar-label">Common questions</h2>
+          <ul class="prompt-list" id="prompt-list">
+            <li>
+              <button type="button" class="prompt-btn" data-prompt="How long do I have to return an unused backpack?">
+                Return window for backpacks
+              </button>
+            </li>
+            <li>
+              <button type="button" class="prompt-btn" data-prompt="Where is ORD-1007 and when should it arrive?">
+                Track order ORD-1007
+              </button>
+            </li>
+            <li>
+              <button type="button" class="prompt-btn" data-prompt="Do you ship internationally? What about Canada?">
+                Shipping to Canada
+              </button>
+            </li>
+            <li>
+              <button type="button" class="prompt-btn" data-prompt="A final-sale bag arrived damaged. Am I out of luck?">
+                Damaged final-sale item
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <section class="sidebar-section sidebar-meta">
+          <h2 class="sidebar-label">This conversation</h2>
+          <dl class="meta-list">
+            <div>
+              <dt>Session</dt>
+              <dd id="session-display">—</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd id="status-display">Ready</dd>
+            </div>
+          </dl>
+          <button type="button" class="text-btn" id="new-chat-btn">Start new conversation</button>
+        </section>
+      </aside>
+
+      <main class="chat-panel">
+        <div class="chat-header">
+          <div>
+            <h2 class="chat-heading">Message us</h2>
+            <p class="chat-subheading">Answers are grounded in our policies and order records.</p>
+          </div>
+        </div>
+
+        <div class="messages" id="messages" aria-live="polite">
+          <article class="message message-agent welcome">
+            <div class="message-body">
+              <p>Hello — I can help with returns, shipping, warranties, and order status.</p>
+              <p class="muted">If you have an order question, include your order ID (for example, ORD-1007).</p>
+            </div>
+          </article>
+        </div>
+
+        <form class="composer" id="composer">
+          <label class="sr-only" for="message-input">Your message</label>
+          <textarea
+            id="message-input"
+            rows="1"
+            placeholder="Type your question…"
+            autocomplete="off"
+            maxlength="4000"
+          ></textarea>
+          <button type="submit" class="send-btn" id="send-btn" aria-label="Send message">
+            <span>Send</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2.5 8h11M9 4.5L13.5 8 9 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      </main>
+    </div>
+
+    <template id="message-template">
+      <article class="message">
+        <div class="message-body"></div>
+        <footer class="message-meta hidden"></footer>
+      </article>
+    </template>
+
+    <script src="/static/app.js" type="module"></script>
+  </body>
+</html>
