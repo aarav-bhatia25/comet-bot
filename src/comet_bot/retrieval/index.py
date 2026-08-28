@@ -92,7 +92,7 @@ class KnowledgeIndex:
 
         ranked.sort(key=lambda result: result.final_score, reverse=True)
         top_results = ranked[:top_k]
-        conflicts = detect_conflicts(top_results)
+        conflicts = detect_conflicts(top_results, query=query)
 
         return RetrievalResponse(
             query=query,

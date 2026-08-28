@@ -66,7 +66,7 @@ def test_detect_breeze_cleaning_conflict() -> None:
         _make_result(care, similarity=0.75, query=query),
         _make_result(card, similarity=0.74, query=query),
     ]
-    conflicts = detect_conflicts(results)
+    conflicts = detect_conflicts(results, query=query)
 
     assert len(conflicts) == 1
     assert conflicts[0].topic == "breeze_tumbler_cleaning"
@@ -74,6 +74,19 @@ def test_detect_breeze_cleaning_conflict() -> None:
         "11-product-care.md",
         "12-breeze-tumbler-product-card.md",
     }
+
+
+def test_detect_breeze_cleaning_conflict_ignores_unrelated_retrieval() -> None:
+    bags = _chunk_by_file_and_heading("11-product-care.md", "Bags and backpacks")
+    card = _chunk_by_file_and_heading("12-breeze-tumbler-product-card.md", "Product details")
+    query = "return window backpack"
+
+    results = [
+        _make_result(bags, similarity=0.75, query=query),
+        _make_result(card, similarity=0.74, query=query),
+    ]
+
+    assert detect_conflicts(results, query=query) == []
 
 
 def test_deterministic_index_prefers_current_returns_policy() -> None:

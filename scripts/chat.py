@@ -11,6 +11,8 @@ from pathlib import Path
 SRC_DIR = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC_DIR))
 
+from openai import APIConnectionError, APIError, RateLimitError
+
 from comet_bot.agent import SessionStore, SupportAgent  # noqa: E402
 
 
@@ -57,7 +59,13 @@ def main() -> int:
             return 0
 
         session.append("user", user_input)
-        trace = agent.run(session.messages, session_id=session.session_id)
+        try:
+            trace = agent.run(session.messages, session_id=session.session_id)
+        except (APIConnectionError, RateLimitError, APIError) as exc:
+            session.messages.pop()
+            print(f"\nError: could not reach the model ({exc.__class__.__name__}). Please try again.\n")
+            continue
+
         session.append("assistant", trace.answer)
         _print_response(trace)
 

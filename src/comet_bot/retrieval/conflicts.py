@@ -7,7 +7,6 @@ from comet_bot.retrieval.models import SearchResult, SourceConflict
 BREEZE_CLEANING_FILES = frozenset(
     {"11-product-care.md", "12-breeze-tumbler-product-card.md"}
 )
-BREEZE_TOPIC_TOKENS = frozenset({"breeze", "tumbler", "dishwasher", "cleaning", "wash"})
 
 
 def _authoritative_files(results: list[SearchResult]) -> set[str]:
@@ -18,21 +17,34 @@ def _authoritative_files(results: list[SearchResult]) -> set[str]:
     }
 
 
-def _results_touch_topic(results: list[SearchResult], topic_tokens: set[str]) -> bool:
+def _query_touches_breeze_topic(query: str) -> bool:
+    lower = query.lower()
+    return any(token in lower for token in ("breeze", "tumbler", "dishwasher"))
+
+
+def _breeze_specific_chunks_present(results: list[SearchResult]) -> bool:
+    """True when retrieved chunks are about Breeze Tumbler care, not unrelated care sections."""
+    breeze_files: set[str] = set()
     for result in results:
-        haystack = f"{result.chunk.heading} {result.chunk.text}".lower()
-        if any(token in haystack for token in topic_tokens):
-            return True
-    return False
+        if result.chunk.source_file not in BREEZE_CLEANING_FILES:
+            continue
+        heading = result.chunk.heading.lower()
+        if "breeze" in heading or "tumbler" in heading or "cleaning" in heading:
+            breeze_files.add(result.chunk.source_file)
+    return breeze_files == BREEZE_CLEANING_FILES
 
 
-def detect_conflicts(results: list[SearchResult]) -> list[SourceConflict]:
+def detect_conflicts(
+    results: list[SearchResult],
+    *,
+    query: str = "",
+) -> list[SourceConflict]:
     """Flag known corpus conflicts when both sides appear in authoritative results."""
     conflicts: list[SourceConflict] = []
     authoritative = _authoritative_files(results)
 
-    if BREEZE_CLEANING_FILES.issubset(authoritative) and _results_touch_topic(
-        results, set(BREEZE_TOPIC_TOKENS)
+    if BREEZE_CLEANING_FILES.issubset(authoritative) and (
+        _query_touches_breeze_topic(query) or _breeze_specific_chunks_present(results)
     ):
         conflicts.append(
             SourceConflict(
