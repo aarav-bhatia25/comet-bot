@@ -11,7 +11,7 @@ from pathlib import Path
 SRC_DIR = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC_DIR))
 
-from comet_bot.agent import RetrievalEvalAgent  # noqa: E402
+from comet_bot.agent import RetrievalEvalAgent, SupportAgent  # noqa: E402
 from comet_bot.eval import run_evaluation  # noqa: E402
 
 
@@ -41,9 +41,15 @@ def main() -> int:
     parser.add_argument("--visible-only", action="store_true", help="Skip custom cases")
     parser.add_argument("--custom-only", action="store_true", help="Skip visible cases")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output")
+    parser.add_argument(
+        "--agent",
+        choices=["support", "retrieval"],
+        default="support",
+        help="Agent implementation to evaluate",
+    )
     args = parser.parse_args()
 
-    agent = RetrievalEvalAgent()
+    agent = SupportAgent() if args.agent == "support" else RetrievalEvalAgent()
     report = run_evaluation(
         agent,
         include_visible=not args.custom_only,
