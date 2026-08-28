@@ -4,11 +4,8 @@ A retrieval-augmented support agent for the Aster & Row take-home assignment. It
 
 ## Demo
 
-[![Demo recording](docs/demo.gif)](docs/demo.gif)
-
-> **Before you submit:** Record a 2–4 minute demo and save it as [`docs/demo.gif`](docs/demo.gif), or replace the link above with a hosted video URL. See [`docs/DEMO.md`](docs/DEMO.md) for a shot list.
-
-The demo should show: a cited KB answer, an order lookup, a multi-turn follow-up, a refusal or handoff case, and the eval suite passing.
+(Watch the demo here)
+https://drive.google.com/file/d/1iLrCT_6b6W5KuXN6D5Hj7Z2pCJQGDh3v/view?usp=sharing
 
 ---
 
