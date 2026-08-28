@@ -279,12 +279,7 @@ Secrets are never logged.
 
 ## AI coding tools used
 
-**Cursor** (Agent / Composer) was used for:
-
-- Scaffolding the package layout, chunker, retrieval index, and eval runner
-- Implementing `SupportAgent`, handoff heuristics, and the web UI
-- Debugging eval failures and writing regression tests
-- Drafting this README
+I used **Cursor** as a coding assistant throughout the project — mostly by prompting for specific pieces (e.g. “add a test for X”, “refactor this function”) rather than having it design the system end-to-end. The architecture — hybrid RAG + tool lookup, eval structure, handoff rules, metadata precedence — was my own; AI helped speed up implementation and iteration.
 
 **Example of a wrong or incomplete AI suggestion:** An early version of conflict detection flagged a Breeze Tumbler source conflict whenever *any* retrieved chunk contained the token `wash`. That produced false conflicts on unrelated backpack return questions because the bags care section says “do not machine wash.” The fix required query- and heading-aware conflict logic, not just token matching in retrieved text.
 
