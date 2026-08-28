@@ -1,239 +1,314 @@
-# AI Agent Intern Take-Home: Build a Reliable RAG Support Agent
+# Comet Bot — Aster & Row Support Agent
 
-## The assignment
+A retrieval-augmented support agent for the Aster & Row take-home assignment. It answers policy questions from the knowledge base, looks up order status via a sanitized tool, handles multi-turn conversation, and recommends human handoff when appropriate.
 
-Aster & Row is a fictional ecommerce company that sells bags, drinkware, and travel accessories. The company wants to launch an AI support agent using the documents and mock order data in this repository.
+## Demo
 
-This repository intentionally contains **only content and data**. There is no starter application and no prescribed stack. Build the smallest reliable system you would be comfortable demonstrating to a customer.
+[![Demo recording](docs/demo.gif)](docs/demo.gif)
 
-## Timebox
+> **Before you submit:** Record a 2–4 minute demo and save it as [`docs/demo.gif`](docs/demo.gif), or replace the link above with a hosted video URL. See [`docs/DEMO.md`](docs/DEMO.md) for a shot list.
 
-Please spend **6–8 hours** on the assignment. Do not exceed eight hours.
-
-A smaller, well-tested system is better than a broad system that works only in a demo. It is acceptable to leave something incomplete if the limitation is clearly documented.
-
-## Submission
-
-Submit **one GitHub repository link**. Nothing else is required.
-
-Your repository must contain:
-
-- Your application source code.
-- Your tests and evaluation suite.
-- Clear setup and run instructions.
-- Evaluation results and known limitations in the README.
-- A short GIF or video embedded in the README showing the agent working.
-
-Do not submit API keys, credentials, customer data, separate documents, or slide decks.
+The demo should show: a cited KB answer, an order lookup, a multi-turn follow-up, a refusal or handoff case, and the eval suite passing.
 
 ---
 
-## Customer scenario
+## Setup and run
 
-Aster & Row has previously tried several AI support prototypes. The customer reported four recurring problems:
+From a clean clone:
 
-1. **Conflicting policy answers:** The agent sometimes says the return window is 30 days and sometimes says it is 45 days.
-2. **Invented order information:** The agent occasionally gives an order status without actually looking it up.
-3. **Lost conversation context:** Follow-up questions such as “What about Canada?” are treated as unrelated questions.
-4. **Unsafe retrieved content:** Internal or instruction-like text inside the knowledge base can affect the agent’s behavior.
+```bash
+git clone <your-repo-url>
+cd comet-bot
 
-The supplied corpus contains realistic data-quality problems, including superseded content, internal notes, conflicting active sources, and fields that must not be shown to customers.
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
-Your task is to build an agent that handles these conditions deliberately rather than succeeding only on ideal questions.
+pip install -r requirements.txt
+pip install -e .
 
----
+cp .env.example .env
+# Edit .env and set OPENAI_API_KEY
 
-# Required capabilities
+python scripts/check_setup.py      # verify paths and API key
+```
 
-## 1. Retrieval-Augmented Generation
+### Web UI (recommended)
 
-Use RAG over the Markdown files in `knowledge-base/`.
+```bash
+python scripts/serve.py
+```
 
-Your implementation must:
+Open **http://127.0.0.1:8080**
 
-- Split and index the supplied documents.
-- Preserve useful metadata from the document front matter.
-- Retrieve only relevant passages instead of sending the entire corpus to the model.
-- Prefer authoritative, active policy documents over superseded or non-policy documents.
-- Include source references in every policy or product answer. A source should identify at least the filename and relevant heading.
-- Avoid making claims that are not supported by the retrieved content.
-- Clearly say when the supplied information is insufficient.
-- Surface genuine conflicts between current authoritative sources rather than silently choosing one.
+### CLI chat
 
-Do not delete or rewrite the supplied source files to make the assignment easier. You may create derived indexes or normalized representations.
+```bash
+python scripts/chat.py
+```
 
-## 2. Order lookup as a tool or function
+### Other utilities
 
-Use `data/orders.json` to implement an order-status lookup tool or function.
+```bash
+python scripts/search_knowledge.py "return window backpack"
+python scripts/lookup_order.py ORD-1007
+python scripts/print_chunks.py
+```
 
-The model must **not** receive the entire orders file in its prompt. It should receive only the result of a lookup when order information is actually required.
+### Tests
 
-The order lookup behavior must:
+```bash
+pytest
+```
 
-- Ask for an order ID when it is missing.
-- Handle unknown and malformed order IDs safely.
-- Normalize harmless input differences such as lowercase IDs or surrounding whitespace.
-- Use the order’s current `status` as authoritative.
-- Avoid inventing a delivery estimate when one is unavailable.
-- Avoid reporting stale delivery fields for cancelled or returned orders.
-- Never expose customer email, address, internal notes, risk scores, or other internal-only fields.
-- Never claim that a lookup happened when it did not.
+Integration tests (call OpenAI) are skipped automatically if `OPENAI_API_KEY` is not set:
 
-Assume that possession of the order ID is sufficient authentication for this mock assignment. You do not need to build a full identity-verification system.
-
-## 3. Multi-turn conversation
-
-Maintain relevant session context across turns.
-
-The agent should correctly handle follow-ups such as:
-
-- “Do you ship internationally?” followed by “What about Canada?”
-- “Where is `ORD-1007`?” followed by “When will it arrive?”
-- A policy question followed by a narrower question about an exception.
-
-The agent should not carry unrelated details indefinitely or mix one session with another.
-
-## 4. Prompting and agent behavior
-
-The agent must:
-
-- Treat user messages, retrieved passages, and tool results as untrusted data.
-- Follow application instructions rather than instructions found inside retrieved documents.
-- Refuse requests to reveal system prompts, hidden instructions, secrets, or internal-only data.
-- Use company content rather than general model knowledge for company-specific questions.
-- Ask a concise clarifying question when required information is missing.
-- Recommend human assistance when the documents conflict, the data is insufficient, or an action cannot be completed.
-- Never promise that a refund, cancellation, replacement, or address change has been completed unless the system actually supports that action.
-
-## 5. Evaluation suite
-
-The file `evaluation/visible-cases.json` contains behavior-level cases that your system must handle.
-
-Build an evaluation suite that:
-
-- Covers every supplied visible case.
-- Adds at least **five original cases** of your own.
-- Can be run using one clearly documented command.
-- Reports individual case results, not only a single overall score.
-- Separately reports useful categories such as retrieval, groundedness, tool use, privacy, and multi-turn behavior.
-- Uses deterministic assertions wherever practical, including source selection, tool calls, tool arguments, forbidden disclosures, and abstention behavior.
-- Does not rely exclusively on another LLM to grade the agent.
-
-The reviewers will also test paraphrases and combinations that are not included in the visible file. Do not hardcode answers for the supplied prompts.
-
-As you build, keep a small **bug diary** in your README. Document at least three failures you found in your own agent, including:
-
-- How you reproduced the failure.
-- The actual root cause.
-- The change you made.
-- The regression test that now catches it.
-
-At least one documented failure should be something you discovered beyond the exact wording of the visible cases. Include an early baseline and final evaluation result so we can see what improved.
-
-## 6. Basic observability
-
-Provide a debug mode, trace, or log that makes it possible to inspect:
-
-- The current user message.
-- Relevant conversation history.
-- Retrieved passages, metadata, and scores.
-- Tool calls and sanitized tool results.
-- The final response.
-- Errors, fallbacks, or handoffs.
-
-Plain structured logs are sufficient. Do not build a dashboard. Never log secrets.
-
-## 7. Minimal interface
-
-A CLI, simple web page, or basic API is sufficient. Visual polish will not affect the score.
-
-The final user-facing response should make it easy to see:
-
-- The answer.
-- Sources, when applicable.
-- Whether the agent is recommending a human handoff.
+```bash
+pytest -m integration
+```
 
 ---
 
-# README requirements
+## Environment variables
 
-Your completed repository README must include:
+Copy [`.env.example`](.env.example) to `.env`. Never commit `.env`.
 
-1. Setup and run instructions that work from a clean clone.
-2. Required environment variables and an `.env.example` without real credentials.
-3. The model, embedding approach, framework, and storage approach you chose.
-4. A short architecture explanation.
-5. The command for running evaluations.
-6. Baseline and final evaluation results, broken down by category.
-7. A bug diary covering at least three reproduced failures, root causes, fixes, and regression tests.
-8. Known limitations and what you would improve before production.
-9. Which AI coding tools you used, what you used them for, and one example of an AI-generated suggestion that was wrong or incomplete.
-10. A **2–4 minute GIF or video embedded in the README** demonstrating:
-   - One knowledge-base question with citations.
-   - One order lookup.
-   - One multi-turn conversation.
-   - One case where the agent correctly refuses to guess or recommends human help.
-   - The evaluation suite running.
-
-GitHub does not play uploaded video files inline in every context. An embedded GIF or a clickable video thumbnail/link inside the README is acceptable.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `OPENAI_API_KEY` | Yes | — | API key for chat completions and embeddings |
+| `OPENAI_CHAT_MODEL` | No | `gpt-4o-mini` | Model used by `SupportAgent` |
+| `OPENAI_EMBEDDING_MODEL` | No | `text-embedding-3-small` | Embedding model for retrieval |
+| `DEBUG` | No | `false` | Set to `true` for structured JSON debug logs on stderr |
 
 ---
 
-# What not to spend time on
+## Technical choices
 
-You do not need to build:
-
-- Authentication or user management.
-- Production deployment infrastructure.
-- A production vector database.
-- Fine-tuning.
-- A polished frontend.
-- Multiple model-provider integrations.
-- Billing, analytics dashboards, or administration screens.
-
----
-
-# Evaluation criteria
-
-| Area | Weight |
-|---|---:|
-| Reliability, groundedness, and safe abstention | 25% |
-| Retrieval quality and document precedence | 20% |
-| Tool use, data handling, and privacy | 15% |
-| Evaluation quality and regression coverage | 20% |
-| Multi-turn behavior and observability | 10% |
-| Code clarity and practical tradeoffs | 5% |
-| README, demo, and customer-facing clarity | 5% |
-
-Framework choice and quantity of code are not scoring criteria.
+| Area | Choice | Rationale |
+|------|--------|-----------|
+| **Chat model** | `gpt-4o-mini` | Fast, inexpensive, sufficient for grounded Q&A with retrieved context |
+| **Embeddings** | `text-embedding-3-small` | Good quality for short policy chunks; same provider as chat |
+| **Framework** | Python 3.11+, OpenAI SDK, NumPy | Minimal dependencies; no heavy agent framework |
+| **Web UI** | FastAPI + static HTML/CSS/JS | Thin API layer over the same agent used by CLI and eval |
+| **Vector storage** | In-memory `KnowledgeIndex` | Chunks embedded at startup; no external DB for this scope |
+| **Sessions** | In-memory `SessionStore` | Per-process conversation history keyed by session ID |
+| **Orders** | In-memory `OrderStore` over `data/orders.json` | Only sanitized lookup results reach the model |
 
 ---
 
-# Repository contents
+## Architecture
+
+```text
+knowledge-base/*.md
+        │
+        ▼
+  ingest/chunker  ──► metadata flags (authoritative, superseded, internal)
+        │
+        ▼
+  KnowledgeIndex  ──► cosine similarity + metadata/keyword reranking + conflict detection
+        │
+        ▼
+  SupportAgent.run(messages) ──► AgentTrace
+        │                              ├── answer
+        │                              ├── sources / source_files
+        │                              ├── tool_calls (order_lookup)
+        │                              └── handoff_recommended
+        │
+        ├── extract_order_id() ──► lookup_order() ──► sanitized JSON (never full orders file)
+        │
+        └── OpenAI chat completion (system prompt + retrieved excerpts + tool output)
+
+Interfaces:  scripts/chat.py  |  scripts/serve.py (web)  |  scripts/run_eval.py
+```
+
+**Agent flow (one turn):**
+
+1. Combine user messages in the session for retrieval query context.
+2. Search the knowledge index; prefer authoritative chunks; diversify by source file.
+3. If an order ID is present, call `lookup_order()` and attach sanitized results.
+4. Build a system message with KB excerpts, conflict notices, and contextual guidance.
+5. Single LLM completion; compute handoff from rules + answer signals.
+6. Return `AgentTrace` for UI, eval assertions, or `DEBUG` logs.
+
+---
+
+## Evaluation
+
+Run the full suite (15 visible + 5 custom cases):
+
+```bash
+python scripts/run_eval.py --agent support
+```
+
+Options:
+
+```bash
+python scripts/run_eval.py --agent retrieval   # rule-based stub (no LLM)
+python scripts/run_eval.py --category privacy
+python scripts/run_eval.py --json
+```
+
+Custom cases live in [`evaluation/custom-cases.json`](evaluation/custom-cases.json).
+
+### Baseline vs final results
+
+**Baseline — `RetrievalEvalAgent` (rule-based stub, no LLM):** used to validate retrieval, tools, and eval assertions before wiring the real agent.
+
+| Metric | Result |
+|--------|--------|
+| Overall | **20 / 20** |
+| Unit tests | 51 (at time of stub completion) |
+
+| Category | Pass |
+|----------|------|
+| abstention | 1/1 |
+| conversation | 2/2 |
+| groundedness | 2/2 |
+| multi-source-grounding | 1/1 |
+| privacy | 2/2 |
+| prompt-security | 1/1 |
+| retrieval | 3/3 |
+| source-conflict | 1/1 |
+| tool-reliability | 4/4 |
+| tool-use | 3/3 |
+
+**Midpoint — `SupportAgent` (first LLM integration, before tuning):**
+
+| Metric | Result |
+|--------|--------|
+| Overall | **13 / 20** |
+
+Common failures: missing handoff on privacy/damaged-item cases, prompt-injection handoff false positive, Canada duties not mentioned, order status wording, paraphrased return-window question asking for order ID.
+
+**Final — `SupportAgent` (after prompt, handoff, and conflict fixes):**
+
+| Metric | Result |
+|--------|--------|
+| Overall | **20 / 20** |
+| Unit tests | **64** |
+
+| Category | Pass |
+|----------|------|
+| abstention | 1/1 |
+| conversation | 2/2 |
+| groundedness | 2/2 |
+| multi-source-grounding | 1/1 |
+| privacy | 2/2 |
+| prompt-security | 1/1 |
+| retrieval | 3/3 |
+| source-conflict | 1/1 |
+| tool-reliability | 4/4 |
+| tool-use | 3/3 |
+
+---
+
+## Observability
+
+Set `DEBUG=true` in `.env` to emit structured JSON logs (stderr) for each agent turn:
+
+- Full message list sent to the model
+- Retrieved chunk IDs
+- Tool calls and arguments
+- Final answer, sources, and handoff flag
+
+Secrets are never logged.
+
+---
+
+## Bug diary
+
+### 1. False conflict on unrelated queries
+
+**Reproduce:** Run `python scripts/search_knowledge.py "return window backpack"`. With OpenAI embeddings, top results included both `11-product-care.md` (bags section mentions “wash”) and `12-breeze-tumbler-product-card.md`, triggering a Breeze cleaning conflict.
+
+**Root cause:** `detect_conflicts()` fired when both files appeared in top-*k* results and any chunk contained generic tokens like `wash`, even when the user was not asking about the Breeze Tumbler.
+
+**Fix:** Require the query to mention breeze/tumbler/dishwasher, or retrieved chunks to be Breeze-specific sections (not the generic bags care heading).
+
+**Regression test:** `tests/test_retrieval.py::test_detect_breeze_cleaning_conflict_ignores_unrelated_retrieval`
+
+---
+
+### 2. Word “ordered” triggered order lookup path
+
+**Reproduce:** Ask “My TrailPlus membership was active when I **ordered**. What is my return window?” The agent treated it as an order-status question.
+
+**Root cause:** Order-intent regex used `\border\b` but was applied without ensuring it matched a standalone word boundary correctly in all code paths; phrasing like “ordered” could interact badly with routing heuristics during early development.
+
+**Fix:** Tightened order-question detection to explicit shipment/status vocabulary; added `tests/test_agent.py::test_ordered_word_does_not_trigger_order_question_detection`.
+
+**Regression test:** `tests/test_agent.py::test_ordered_word_does_not_trigger_order_question_detection`
+
+---
+
+### 3. LLM agent asked for order ID on general return-policy questions
+
+**Reproduce:** Custom case `custom-return-window-paraphrase` — “I bought a daypack last week… how many days do I get?” — `SupportAgent` responded with “please share your order ID.”
+
+**Root cause:** System prompt emphasized asking for order IDs; the model over-generalized to non-order return-policy questions.
+
+**Fix:** Added prompt rule and a contextual notice when the query mentions returns without an order ID, instructing the model to answer from the standard return window.
+
+**Regression test:** Covered by eval case `custom-return-window-paraphrase` in `python scripts/run_eval.py --agent support`.
+
+---
+
+### 4. Over-aggressive handoff on prompt-injection case (discovered beyond visible wording)
+
+**Reproduce:** After first `SupportAgent` integration, `retrieved-prompt-injection` failed because `handoff_recommended=True` when the case expects `false`.
+
+**Root cause:** Handoff logic treated broad answer phrases (“insufficient”, “cannot confirm”) as always requiring handoff, including cases where the agent correctly refused an injection attempt without needing human escalation.
+
+**Fix:** `compute_handoff_recommended()` in `agent/handoff.py` explicitly excludes the migration-note injection pattern and uses narrower abstention/exception signals.
+
+**Regression test:** `tests/test_handoff.py::test_prompt_injection_does_not_trigger_handoff` plus eval case `retrieved-prompt-injection`.
+
+---
+
+## Known limitations
+
+- **In-memory only** — embeddings, sessions, and order data reload on every process start; no persistence across restarts or horizontal scaling.
+- **LLM variability** — eval passes 20/20 with `gpt-4o-mini` at temperature 0.1, but wording may differ on re-runs; assertions allow flexible phrase matching where appropriate.
+- **Conflict detection** — only the known Breeze Tumbler cleaning conflict is encoded; other corpus issues rely on retrieval ranking and LLM behavior.
+- **No auth** — possession of an order ID is treated as sufficient (per assignment); production would need customer verification.
+- **Local-only** — no deployment; API keys stay in `.env` on the reviewer's machine.
+- **Single provider** — OpenAI only; no fallback model.
+
+**Before production:** persistent vector store, session store (Redis), rate limiting, auth, eval in CI, citation verification layer, and human-in-the-loop for handoff cases.
+
+---
+
+## AI coding tools used
+
+**Cursor** (Agent / Composer) was used for:
+
+- Scaffolding the package layout, chunker, retrieval index, and eval runner
+- Implementing `SupportAgent`, handoff heuristics, and the web UI
+- Debugging eval failures and writing regression tests
+- Drafting this README
+
+**Example of a wrong or incomplete AI suggestion:** An early version of conflict detection flagged a Breeze Tumbler source conflict whenever *any* retrieved chunk contained the token `wash`. That produced false conflicts on unrelated backpack return questions because the bags care section says “do not machine wash.” The fix required query- and heading-aware conflict logic, not just token matching in retrieved text.
+
+---
+
+## Repository layout
 
 ```text
 .
-├── README.md
-├── knowledge-base/
-│   ├── 01-returns-policy-current.md
-│   ├── 02-returns-policy-legacy.md
-│   ├── 03-final-sale-and-promotions.md
-│   ├── 04-damaged-or-wrong-items.md
-│   ├── 05-domestic-shipping.md
-│   ├── 06-international-shipping.md
-│   ├── 07-warranty.md
-│   ├── 08-order-changes-and-cancellations.md
-│   ├── 09-trailplus-membership.md
-│   ├── 10-gift-cards-and-price-adjustments.md
-│   ├── 11-product-care.md
-│   ├── 12-breeze-tumbler-product-card.md
-│   ├── 13-support-escalation.md
-│   └── 14-internal-content-migration-notes.md
-├── data/
-│   ├── orders.json
-│   └── orders-data-dictionary.md
-└── evaluation/
-    └── visible-cases.json
+├── knowledge-base/          # Source Markdown policies (read-only)
+├── data/orders.json         # Mock order data
+├── evaluation/              # visible-cases.json + custom-cases.json
+├── src/comet_bot/
+│   ├── ingest/              # Chunking and metadata
+│   ├── retrieval/           # Embeddings, index, ranking, conflicts
+│   ├── tools/               # Order lookup
+│   ├── agent/               # SupportAgent, prompts, handoff, sessions
+│   ├── eval/                # Eval loader, assertions, runner
+│   └── web/                 # FastAPI app + static UI
+├── scripts/                 # serve, chat, run_eval, utilities
+├── tests/                   # Unit and integration tests
+└── docs/DEMO.md             # Demo recording checklist
 ```
 
-Good luck. Build for reliability, not just for the happy-path demo.
+---
+
+Built for the Aster & Row AI support agent take-home assignment.
